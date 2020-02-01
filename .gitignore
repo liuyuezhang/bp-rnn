@@ -1,3 +1,8 @@
+# data and res
+data/
+res/
+
+# PyCharm
 .idea/
 
 # Byte-compiled / optimized / DLL files

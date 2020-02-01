@@ -1,11 +1,7 @@
-import numpy as np
+from .utils import *
 
 
-def sigmoid(x):
-    return 1/(1 + np.exp(-x))
-
-
-class DynamicRNN:
+class RNN:
     def __init__(self, d, n, alpha=0.5, lr=0.1):
         self.U = np.random.rand(n, d)
         self.V = np.random.rand(d, n)
@@ -37,24 +33,3 @@ class DynamicRNN:
     def reset(self):
         self.u = np.zeros((self.n, 1))
         self.s = None
-
-
-class FC:
-    def __init__(self, d, n, lr):
-        self.W = np.random.randn(n, d)
-
-        self.x = None
-        self.z = None
-        self.y = None
-
-        self.lr = lr
-
-    def foward(self, x):
-        self.x = x
-        z = self.W @ x
-        self.y = sigmoid(z)
-        return self.y
-
-    def backward(self, e):
-        delta = (e * self.y * (1 - self.y)) @ self.x.T
-        self.W -= self.lr * delta

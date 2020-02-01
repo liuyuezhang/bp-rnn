@@ -1,7 +1,5 @@
-import numpy as np
-
 from envs.binary_world.env import *
-from models.dynamic_rnn import DynamicRNN
+from models.hebbian.rnn import DynamicRNN
 
 
 EPOCHS = 20000

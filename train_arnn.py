@@ -1,9 +1,8 @@
 import torch
 import torch.nn as nn
-import numpy as np
 
 from envs.binary_world.env import *
-from models.rnn import RNN
+from models.pytorch.rnn import RNN
 
 
 EPOCHS = 20000
