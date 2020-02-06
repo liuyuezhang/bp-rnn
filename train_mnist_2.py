@@ -1,5 +1,6 @@
-from models.hebbian.fc import FC, SeriesModule
+from models.hebbian.fc import FC, Series, Pipeline
 import argparse
+import wandb
 
 import torch
 import torch.nn.functional as F
@@ -8,7 +9,7 @@ import numpy as np
 from torchvision import datasets, transforms
 
 
-def train(args, model, train_loader, epoch):
+def train(args, model, train_loader, epoch, wandb):
     for batch_idx, (data, target) in enumerate(train_loader):
         # convert tensor to numpy
         data = data.numpy()
@@ -25,9 +26,10 @@ def train(args, model, train_loader, epoch):
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset),
                 100. * batch_idx / len(train_loader), loss))
+            wandb.log({"train_loss": loss, "batch": (epoch-1) * len(train_loader) + batch_idx})
 
 
-def test(args, model, test_loader):
+def test(args, model, test_loader, epoch, wandb):
     test_loss = 0
     correct = 0
     with torch.no_grad():
@@ -50,6 +52,7 @@ def test(args, model, test_loader):
     print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
         test_loss, correct, len(test_loader.dataset),
         100. * correct / len(test_loader.dataset)))
+    wandb.log({"test_acc": 100. * correct / len(test_loader.dataset), "epoch": epoch})
 
 
 def main():
@@ -59,7 +62,7 @@ def main():
                         help='input batch size for training (default: 64)')
     parser.add_argument('--test-batch-size', type=int, default=1, metavar='N',
                         help='input batch size for testing (default: 1000)')
-    parser.add_argument('--epochs', type=int, default=14, metavar='N',
+    parser.add_argument('--epochs', type=int, default=10, metavar='N',
                         help='number of epochs to train (default: 14)')
     parser.add_argument('--lr', type=float, default=1e-4, metavar='LR',
                         help='learning rate (default: 1.0)')
@@ -69,6 +72,14 @@ def main():
                         help='how many batches to wait before logging training status')
 
     args = parser.parse_args()
+
+    # logger
+    name = 'mnist' + '_' + 'module-rmsprop' + '_' + str(args.seed)
+    wandb.init(name=name, project="bp-rnn", entity="liuyuezhang")
+
+    # seed
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
 
     train_loader = torch.utils.data.DataLoader(
         datasets.MNIST('./data', train=True, download=True,
@@ -89,11 +100,11 @@ def main():
     fc2 = FC(m=100, n=10, lr=lr)
     modules = [fc1, fc2]
 
-    model = SeriesModule(modules)
+    model = Series(modules)
 
     for epoch in range(1, args.epochs + 1):
-        train(args, model, train_loader, epoch)
-        test(args, model, test_loader)
+        train(args, model, train_loader, epoch, wandb)
+        test(args, model, test_loader, epoch, wandb)
 
 
 if __name__ == '__main__':
